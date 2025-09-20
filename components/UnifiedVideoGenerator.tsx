@@ -184,9 +184,7 @@ export default function UnifiedVideoGenerator() {
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold gradient-text mb-4">Adobe Avatar Video Generator</h2>
-        <p className="text-gray-600 max-w-3xl mx-auto">
-          Create professional avatar videos with Adobe Firefly Services.
-        </p>
+
         {isDemoMode && (
           <div className="mt-4 inline-flex items-center px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
@@ -200,28 +198,103 @@ export default function UnifiedVideoGenerator() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Left Panel */}
         <div className="space-y-6">
-          {/* Input Type */}
+
+          {/* Avatar Selection */}
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Input Type</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: 'text', label: 'Text', icon: '📝' },
-                { value: 'textFile', label: 'Text File', icon: '📄' },
-                { value: 'audio', label: 'Audio File', icon: '🎵' }
-              ].map((type) => (
-                <button
-                  key={type.value}
-                  onClick={() => setInputType(type.value as any)}
-                  className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-                    inputType === type.value
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{type.icon}</div>
-                  <span className="text-sm font-medium">{type.label}</span>
-                </button>
-              ))}
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Avatar</h3>
+            {AvaterState.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading avatars...</p>
+              </div>
+            ) : (
+              <div className="overflow-y-auto pr-2 custom-scrollbar" style={{maxHeight: '1300px'}}>
+                <div className="grid grid-cols-2 gap-4">
+                  {AvaterState.map((avatar) => (
+                    <button
+                      key={avatar.avatarId}
+                      onClick={() => setSelectedAvatar(avatar.avatarId)}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
+                        selectedAvatar === avatar.avatarId
+                          ? 'border-primary-500 bg-primary-50 shadow-md'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden border-2 border-gray-100">
+                        <img 
+                          src={avatar.thumbnailUrls?.hd || avatar.thumbnailUrls?.lowRes}
+                          alt={avatar.displayName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = `https://ui-avatars.com/api/?name=${avatar.displayName}&background=6366f1&color=fff&size=64`
+                          }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 block">{avatar.displayName}</span>
+                      <p className="text-xs text-gray-500 mt-1 text-center leading-tight">
+                        {avatar.ageGroup}, {avatar.gender === "M" ? "Male" : "Female"}  
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+
+        </div>
+
+        {/* Right Panel - Video Preview */}
+        <div className="space-y-6">
+
+          {/* Video Preview */}
+          <div className="card p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Video Preview</h4>
+            
+            <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl flex items-center justify-center relative overflow-hidden">
+              {currentStep === 1 && (
+                <div className="text-center text-white">
+                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Wand2 className="w-8 h-8" />
+                  </div>
+                  <p className="text-lg font-medium">Enter your prompt to start</p>
+                </div>
+              )}
+              
+              {currentStep === 2 && (
+                <div className="text-center text-white">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  </div>
+                  <p className="text-lg font-medium">Generating...</p>
+                  <p className="text-sm text-gray-300">Creating your video</p>
+                </div>
+              )}
+
+              {currentStep === 3 && (() => {
+                const job = getCurrentJob()
+                const videoUrl = job?.output?.destination?.url
+                return videoUrl && (
+                  <div className="w-full h-full">
+                    <video
+                      src={videoUrl}
+                      controls
+                      className="w-full h-full rounded-xl"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    <div className="absolute bottom-4 right-4">
+                      <button
+                        onClick={handleDownload}
+                        className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-2 px-4 rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </div>
 
@@ -245,89 +318,6 @@ export default function UnifiedVideoGenerator() {
               )}
             </div>
           )}
-
-          {/* Text File */}
-          {inputType === 'textFile' && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Text File</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
-                <input
-                  type="file"
-                  accept=".txt,.md"
-                  onChange={(e) => setTextFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="textFile"
-                />
-                <label htmlFor="textFile" className="cursor-pointer">
-                  <div className="text-4xl mb-2">📄</div>
-                  <p className="text-gray-600">{textFile ? textFile.name : 'Click to upload text file'}</p>
-                  <p className="text-sm text-gray-400 mt-1">Supports .txt and .md files</p>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Audio File */}
-          {inputType === 'audio' && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Audio File</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
-                <input
-                  type="file"
-                  accept=".wav,.mp3,.m4a"
-                  onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                  id="audioFile"
-                />
-                <label htmlFor="audioFile" className="cursor-pointer">
-                  <div className="text-4xl mb-2">🎵</div>
-                  <p className="text-gray-600">{audioFile ? audioFile.name : 'Click to upload audio file'}</p>
-                  <p className="text-sm text-gray-400 mt-1">Supports .wav, .mp3, .m4a files</p>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Avatar Selection */}
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Avatar</h3>
-            {AvaterState.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading avatars...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {AvaterState.map((avatar) => (
-                  <button
-                    key={avatar.avatarId}
-                    onClick={() => setSelectedAvatar(avatar.avatarId)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
-                      selectedAvatar === avatar.avatarId
-                        ? 'border-primary-500 bg-primary-50 shadow-md'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden border-2 border-gray-100">
-                      <img 
-                        src={avatar.thumbnailUrls?.hd || avatar.thumbnailUrls?.lowRes}
-                        alt={avatar.displayName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${avatar.displayName}&background=6366f1&color=fff&size=64`
-                        }}
-                      />
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900 block">{avatar.displayName}</span>
-                    <p className="text-xs text-gray-500 mt-1 text-center leading-tight">
-                      {avatar.ageGroup}, {avatar.gender === "M" ? "Male" : "Female"}  
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
 
           {/* Voice Selection */}
           {(inputType === 'text' || inputType === 'textFile') && (
@@ -372,6 +362,33 @@ export default function UnifiedVideoGenerator() {
                   })()}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Results Actions */}
+          {currentStep === 3 && (
+            <div className="card p-6">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    setCurrentStep(1)
+                    setInputType('text')
+                    setPrompt('')
+                    setSelectedAvatar('')
+                    setSelectedVoice('')
+                    setBackgroundType('color')
+                    setBackgroundColor('#ffffff')
+                    setBackgroundUrl('')
+                    setOutputFormat('video/mp4')
+                    setAudioFile(null)
+                    setTextFile(null)
+                    setIsDemoMode(false)
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300"
+                >
+                  Create Another Video
+                </button>
+              </div>
             </div>
           )}
 
@@ -464,87 +481,6 @@ export default function UnifiedVideoGenerator() {
               )}
             </button>
           </div>
-        </div>
-
-        {/* Right Panel - Video Preview */}
-        <div className="space-y-6">
-          {/* Video Preview */}
-          <div className="card p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Video Preview</h4>
-            
-            <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl flex items-center justify-center relative overflow-hidden">
-              {currentStep === 1 && (
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Wand2 className="w-8 h-8" />
-                  </div>
-                  <p className="text-lg font-medium">Enter your prompt to start</p>
-                </div>
-              )}
-              
-              {currentStep === 2 && (
-                <div className="text-center text-white">
-                  <div className="w-16 h-16 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                    <Loader2 className="w-8 h-8 animate-spin" />
-                  </div>
-                  <p className="text-lg font-medium">Generating...</p>
-                  <p className="text-sm text-gray-300">Creating your video</p>
-                </div>
-              )}
-
-              {currentStep === 3 && (() => {
-                const job = getCurrentJob()
-                const videoUrl = job?.output?.destination?.url
-                return videoUrl && (
-                  <div className="w-full h-full">
-                    <video
-                      src={videoUrl}
-                      controls
-                      className="w-full h-full rounded-xl"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                    <div className="absolute bottom-4 right-4">
-                      <button
-                        onClick={handleDownload}
-                        className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-2 px-4 rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </button>
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          </div>
-
-          {/* Results Actions */}
-          {currentStep === 3 && (
-            <div className="card p-6">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => {
-                    setCurrentStep(1)
-                    setInputType('text')
-                    setPrompt('')
-                    setSelectedAvatar('')
-                    setSelectedVoice('')
-                    setBackgroundType('color')
-                    setBackgroundColor('#ffffff')
-                    setBackgroundUrl('')
-                    setOutputFormat('video/mp4')
-                    setAudioFile(null)
-                    setTextFile(null)
-                    setIsDemoMode(false)
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300"
-                >
-                  Create Another Video
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
       </div>
