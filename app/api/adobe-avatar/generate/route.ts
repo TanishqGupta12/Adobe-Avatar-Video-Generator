@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     const validatedData = AdobeAvatarSchema.parse(body)
 
     const adobeAPI = new AdobeAvatarAPI({
-      clientId: process.env.ADOBE_CLIENT_ID || 'PLACEHOLDER',
-      clientSecret: process.env.ADOBE_CLIENT_SECRET || 'PLACEHOLDER'
+      clientId: process.env.ADOBE_CLIENT_ID || '',
+      clientSecret: process.env.ADOBE_CLIENT_SECRET || ''
     })
 
     // Check if we're in demo mode
@@ -141,8 +141,8 @@ export async function GET(request: NextRequest) {
     }
 
     const adobeAPI = new AdobeAvatarAPI({
-      clientId: process.env.ADOBE_CLIENT_ID || 'PLACEHOLDER',
-      clientSecret: process.env.ADOBE_CLIENT_SECRET || 'PLACEHOLDER'
+      clientId: process.env.ADOBE_CLIENT_ID ,
+      clientSecret: process.env.ADOBE_CLIENT_SECRET
     })
 
     let result
